@@ -541,9 +541,11 @@ int getProcCount(void){
       count ++;
     }
   }
+  cprintf("%d\n", count);
   return count;
 }
 
 int getReadCount(void){
+  cprintf("%d\n", readCount);
   return readCount;
 }
