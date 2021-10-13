@@ -66,7 +66,7 @@ sys_dup(void)
   return fd;
 }
 
-readCount = 0;
+int readCount = 0;
 int
 sys_read(void)
 {
