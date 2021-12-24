@@ -101,3 +101,18 @@ int
 sys_getReadCount(void){
   return getReadCount();
 }
+
+int sys_clone(void){
+
+    void * stack = 0;
+
+    if(argint(2, (int *) &stack) < 0)
+        return -1;
+
+    return clone(stack);
+}
+
+int sys_join(void){
+  
+    return join();
+}
