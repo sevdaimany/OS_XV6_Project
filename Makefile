@@ -186,6 +186,10 @@ UPROGS=\
 	_threads\
 	_threadsTest\
 	_thread_creator\
+	_roundRobinTest\
+	_prioritySchedTest\
+	_multiLayeredQueuedTest\
+
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
@@ -263,6 +267,9 @@ EXTRA=\
 	threads.c\
 	threadsTest.c\
 	thread_creator.c\
+	roundRobinTest.c\
+	prioritySchedTest.c \
+	multiLayeredQueuedTest.c\
 
 dist:
 	rm -rf dist

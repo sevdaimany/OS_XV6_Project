@@ -28,6 +28,16 @@ int getReadCount(void);
 int clone(void*);
 int join(void);
 
+int setPriority(int newOne);
+int changePolicy(int nextPolicy);
+int getTurnAroundTime(int pid);
+int getWaitingTime(int pid);
+int getCBT(int pid);
+int wait_(int *procTimes);
+int setQueue(int queue_num);
+
+
+
 // ulib.c
 int stat(const char*, struct stat*);
 char* strcpy(char*, const char*);

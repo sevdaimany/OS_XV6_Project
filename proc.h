@@ -51,7 +51,28 @@ struct proc {
   char name[16];               // Process name (debugging)
   int threads;
   int stackTop;
+
+  int queue_num;               
+  int priority;      
+  int rr_remaining_time; 
+  int creation_duration;    
+  int sleeping_duration;    
+  int runnable_duration;   
+  int running_duration;     
+  int termination_duration; 
+
+  };
+
+enum SchedulingPolicy
+{
+  DEFAULT = 0,
+  ROUND_ROBIN = 1,
+  PRIORITY = 2,
+  MULTILAYRED_PRIORITY = 3
 };
+
+extern enum SchedulingPolicy policy;
+
 
 // Process memory is laid out contiguously, low addresses first:
 //   text

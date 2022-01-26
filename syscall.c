@@ -108,6 +108,14 @@ extern int sys_getReadCount(void);
 extern int sys_clone(void);
 extern int sys_join(void);
 
+extern int sys_setPriority(void);
+extern int sys_changePolicy(void);
+extern int sys_getTurnAroundTime(void);
+extern int sys_getWaitingTime(void);
+extern int sys_getCBT(void);
+extern int sys_wait_(void);
+extern int sys_setQueue(void);
+
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
 [SYS_exit]    sys_exit,
@@ -134,6 +142,13 @@ static int (*syscalls[])(void) = {
 [SYS_getReadCount] sys_getReadCount,
 [SYS_clone]   sys_clone,
 [SYS_join]    sys_join,
+[SYS_setPriority] sys_setPriority,
+[SYS_changePolicy] sys_changePolicy,
+[SYS_getTurnAroundTime] sys_getTurnAroundTime,
+[SYS_getWaitingTime] sys_getWaitingTime,
+[SYS_getCBT] sys_getCBT,
+[SYS_wait_] sys_wait_,
+[SYS_setQueue] sys_setQueue,
 };
 
 void

@@ -24,3 +24,11 @@
 #define SYS_getReadCount 23
 #define SYS_clone 24
 #define SYS_join 25
+
+#define SYS_setPriority 26
+#define SYS_changePolicy 27
+#define SYS_getTurnAroundTime 28
+#define SYS_getWaitingTime 29
+#define SYS_getCBT 30
+#define SYS_wait_ 31
+#define SYS_setQueue 32

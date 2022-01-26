@@ -7,6 +7,8 @@
 #include "proc.h"
 #include "spinlock.h"
 
+enum schedPolicy policy;
+
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
@@ -116,6 +118,13 @@ found:
   p->context = (struct context*)sp;
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
+
+  p->sleeping_duration = 0;
+  p->runnable_duration = 0;
+  p->running_duration = 0;
+  p->rr_remaining_time = QUANTUM;
+  p->queue = 0; 
+  p->priority = PRIORITY_DEFAULT;
 
   return p;
 }
@@ -403,6 +412,53 @@ wait(void)
   }
 }
 
+
+void *highestPriorityInQueue(void)
+{
+  struct proc *p = 0;
+  struct proc *highest = 0;
+  int hasRunnable = 0;
+  for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+  {
+    if (p->state == RUNNABLE && p->queue == 2)
+    {
+      highest = p;
+      hasRunnable = 1;
+      break;
+    }
+  }
+
+  for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) // finding the process with highest priority
+  {
+    if (p->state != RUNNABLE || p->queue != 2)
+      continue;
+    if (p->priority < highest->priority)
+      highest = p;
+  }
+
+  if (hasRunnable)
+    return highest;
+  else
+    return (void *)-1;
+}
+
+void switch_process(struct cpu *c, struct proc *p)
+{  
+  // Switch to chosen process.  It is the process's job
+      // to release ptable.lock and then reacquire it
+      // before jumping back to us.
+      c->proc = p;
+      switchuvm(p);
+      p->state = RUNNING;
+
+      swtch(&(c->scheduler), p->context);
+      switchkvm();
+
+      // Process is done running for now.
+      // It should have changed its p->state before coming back.
+      c->proc = 0;
+  }
+
 //PAGEBREAK: 42
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.
@@ -417,6 +473,10 @@ scheduler(void)
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
+
+  struct proc *highestPriorityProcess = 0; 
+  struct proc *lowestPriorityProcess = 0;  
+  int existRunnableProcess = 0;       
   
   for(;;){
     // Enable interrupts on this processor.
@@ -424,29 +484,85 @@ scheduler(void)
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
+    switch (policy)
+    {
+    case DEFAULT:
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
 
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
-      c->proc = p;
-      switchuvm(p);
-      p->state = RUNNING;
+      switch_process(c, p);
+  
+     }
+    break;
+    case ROUND_ROBIN:
+      for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+      {
+        if (p->state != RUNNABLE)
+          continue;
+        switch_process(c, p);
+      }
+      break;
 
-      swtch(&(c->scheduler), p->context);
-      switchkvm();
+    case PRIORITY:
+      existRunnableProcess = 0;
+      for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+      {
+        if (p->state == RUNNABLE)
+        {
+          highestPriorityProcess = p;
+          existRunnableProcess = 1;
+          break;
+        }
+      }
 
-      // Process is done running for now.
-      // It should have changed its p->state before coming back.
-      c->proc = 0;
+      for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) 
+      {
+        if (p->state != RUNNABLE)
+          continue;
+        if (p->priority < highest_p->priority)
+          highestPriorityProcess = p;
+      }
+
+      if (existRunnableProcess)
+      {
+        switch_process(c, highest_p);
+      }
+      break;
+
+    case MULTILAYRED_PRIORITY:
+    //   NOT Complete
     }
     release(&ptable.lock);
 
   }
 }
 
+
+void updateDurations()
+{
+  struct proc *p;
+  for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+  {
+    switch (p->state)
+    {
+    case SLEEPING:
+      p->sleeping_duration++;
+      break;
+
+    case RUNNABLE:
+      p->runnable_duration++;
+      break;
+
+    case RUNNING:
+      p->running_duration++;
+      break;
+
+    default:
+      break;
+    }
+  }
+}
 // Enter scheduler.  Must hold only ptable.lock
 // and have changed proc->state. Saves and restores
 // intena because intena is a property of this
@@ -756,3 +872,120 @@ join(void)
   }
 }
 
+
+
+
+
+int changePolicy(int nextPolicy)
+{
+  if (nextPolicy >= 0 && nextPolicy <= 4)
+  {
+    policy = nextPolicy;
+    return 0;
+  }
+  else
+    return -1;
+}
+
+int setPriority(int newOne)
+{
+  struct proc *p = myproc();
+  if (newOne > 0 && newOne <= 6)
+  {
+    p->priority = newOne;
+  }
+  else{
+    p->priority = 5
+  }
+
+  return 0;
+
+}
+
+
+int getTurnAroundTime(int pid)
+{
+  int duration  = (&ptable.proc[pid])->sleeping_duration + (&ptable.proc[pid])->runnable_duration + (&ptable.proc[pid])->running_duration;
+  return duration;
+
+}
+
+int getWaitingTime(int pid)
+{
+  int duration = (&ptable.proc[pid])->sleeping_duration + (&ptable.proc[pid])->runnable_duration;
+  return duration;
+}
+
+int getCBT(int pid)
+{
+  int duration = (&ptable.proc[pid])->running_duration;
+  return duration;
+}
+
+int wait_(int *procDurationsInfo)
+{
+  struct proc *p;
+  int havekids, pid;
+  struct proc *curproc = myproc();
+
+  acquire(&ptable.lock);
+  for (;;)
+  {
+    // Scan through table looking for exited children.
+    havekids = 0;
+    for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+    {
+      if (p->parent != curproc)
+        continue;
+      havekids = 1;
+      if (p->state == ZOMBIE)
+      {
+        // Found one.
+        int turnAroundTime = getTurnAroundTime(p->pid);
+        int waitingTime = getWaitingTime(p->pid);
+        int cbt = getCBT(p->pid);
+        procDurationsInfo[0] = turnAroundTime;
+        procDurationsInfo[1] = waitingTime;
+        procDurationsInfo[2] = cbt;
+        procDurationsInfo[3] = p->priority;
+
+        pid = p->pid;
+        kfree(p->kstack);
+        p->kstack = 0;
+        freevm(p->pgdir);
+        p->pid = 0;
+        p->parent = 0;
+        p->name[0] = 0;
+        p->killed = 0;
+        p->state = UNUSED;
+  
+        release(&ptable.lock);
+        return pid;
+      }
+    }
+
+    // No point waiting if we don't have any children.
+    if (!havekids || curproc->killed)
+    {
+      release(&ptable.lock);
+      return -1;
+    }
+
+    // Wait for children to exit.  (See wakeup1 call in proc_exit.)
+    sleep(curproc, &ptable.lock); //DOC: wait-sleep
+  }
+}
+
+int setQueue(int queue_num)
+{
+  struct proc *curproc = myproc();
+  if (queue_num > 6 || queue_num < 1)
+  {
+    return -1;
+  }
+  else
+  {
+    curproc->queue = queue_num;
+    return 0;
+  }
+}

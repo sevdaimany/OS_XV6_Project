@@ -104,7 +104,39 @@ trap(struct trapframe *tf)
   // If interrupts were on while locks held, would need to check nlock.
   if(myproc() && myproc()->state == RUNNING &&
      tf->trapno == T_IRQ0+IRQ_TIMER)
-    yield();
+    {  
+
+    switch (policy)
+    {
+    case DEFAULT:
+      yield();
+      break;
+
+    case ROUND_ROBIN:
+      if (myproc()->rr_remaining_time == 0)
+      {
+        // Reset remainin time back to quantum
+        myproc()->rr_remaining_time = QUANTUM;
+        yield();
+      }
+      else
+      {
+        myproc()->rr_remaining_time--;
+      }
+      break;
+
+    case PRIORITY:
+      yield();
+      break;
+
+    case MULTILAYRED_PRIORITY:
+      //  not complete
+    }
+  
+   if (tf->trapno == T_IRQ0 + IRQ_TIMER)
+  {
+    updateDurations();
+  }
 
   // Check if the process has been killed since we yielded
   if(myproc() && myproc()->killed && (tf->cs&3) == DPL_USER)
