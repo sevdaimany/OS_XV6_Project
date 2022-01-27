@@ -131,8 +131,83 @@ trap(struct trapframe *tf)
       break;
 
     case MULTILAYRED_PRIORITY:
-    break;
-      //  not complete
+    
+    switch (myproc()->queue_num)
+      {
+      case 1: 
+        if (myproc()->rr_remaining_time == 0)
+        {
+          // Reset remainin time back to quantum
+          myproc()->rr_remaining_time = QUANTUM;
+          yield();
+        }
+        else
+        {
+          myproc()->rr_remaining_time--;
+        }
+        break;
+      case 2: 
+        if (myproc()->rr_remaining_time == 0)
+        {
+          // Reset remainin time back to quantum
+          myproc()->rr_remaining_time = 2*QUANTUM;
+          yield();
+        }
+        else
+        {
+          myproc()->rr_remaining_time--;
+        }
+        break;
+      case 3:
+      if (myproc()->rr_remaining_time == 0)
+        {
+          // Reset remainin time back to quantum
+          myproc()->rr_remaining_time = 3*QUANTUM;
+          yield();
+        }
+        else
+        {
+          myproc()->rr_remaining_time--;
+        }
+        break;
+
+      case 4:
+        if (myproc()->rr_remaining_time == 0)
+        {
+          // Reset remainin time back to quantum
+          myproc()->rr_remaining_time = 4*QUANTUM;
+          yield();
+        }
+        else
+        {
+          myproc()->rr_remaining_time--;
+        }
+        break;
+      case 6:
+        if (myproc()->rr_remaining_time == 0)
+        {
+          // Reset remainin time back to quantum
+          myproc()->rr_remaining_time = 6*QUANTUM;
+          yield();
+        }
+        else
+        {
+          myproc()->rr_remaining_time--;
+        }
+        break;
+      default:
+        if (myproc()->rr_remaining_time == 0)
+        {
+          // Reset remainin time back to quantum
+          myproc()->rr_remaining_time = 5*QUANTUM;
+          yield();
+        }
+        else
+        {
+          myproc()->rr_remaining_time--;
+        }
+        break;
+      }
     }
   }
   

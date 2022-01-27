@@ -123,7 +123,7 @@ found:
   p->runnable_duration = 0;
   p->running_duration = 0;
   p->rr_remaining_time = QUANTUM;
-  p->queue_num = 0; 
+  p->queue_num = 1; 
   p->priority = PRIORITY_DEFAULT;
 
   return p;
@@ -530,9 +530,17 @@ scheduler(void)
       break;
 
     case MULTILAYRED_PRIORITY:
-    break;
-    //   NOT Complete
+    for (int currentQueue = 1; currentQueue <= 6; currentQueue++){
+      for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+      {
+        if (p->queue_num == currentQueue && p->state == RUNNABLE)
+              {
+                switch_process(c, p);
+                break;
+              }
+      }
     }
+      break;
     release(&ptable.lock);
 
   }
@@ -878,7 +886,7 @@ join(void)
 
 int changePolicy(int nextPolicy)
 {
-  if (nextPolicy >= 0 && nextPolicy <= 4)
+  if (nextPolicy >= 0 && nextPolicy < 4)
   {
     policy = nextPolicy;
     return 0;
