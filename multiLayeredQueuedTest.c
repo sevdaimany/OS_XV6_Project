@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
         int CBTs[NUM_CHILDREN] = {0};        
         int *procTimes = malloc(4 * sizeof(int));
         int i = 0;
-        while (customWait(procTimes) > 0)
+        while (wait_(procTimes) > 0)
         {
             int childQueue = procTimes[3];
             int childTurnaround = procTimes[0];

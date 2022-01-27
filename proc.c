@@ -540,10 +540,10 @@ scheduler(void)
               }
       }
     }
-      break;
-    release(&ptable.lock);
-
+    break;
   }
+    release(&ptable.lock);
+}
 }
 
 
