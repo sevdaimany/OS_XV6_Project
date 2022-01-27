@@ -127,6 +127,7 @@ int             getProcCount(void);
 int             getReadCount(void);
 int             clone(void*);
 int             join(void);
+void            updateDurations();
 int             setPriority(int newPriority);
 int             changePolicy(int newPolicy);
 int             getTurnAroundTime(int pid);

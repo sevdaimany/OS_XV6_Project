@@ -7,7 +7,7 @@
 #include "proc.h"
 #include "spinlock.h"
 
-enum schedPolicy policy;
+enum SchedulingPolicy policy;
 
 struct {
   struct spinlock lock;
@@ -123,7 +123,7 @@ found:
   p->runnable_duration = 0;
   p->running_duration = 0;
   p->rr_remaining_time = QUANTUM;
-  p->queue = 0; 
+  p->queue_num = 0; 
   p->priority = PRIORITY_DEFAULT;
 
   return p;
@@ -420,7 +420,7 @@ void *highestPriorityInQueue(void)
   int hasRunnable = 0;
   for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
   {
-    if (p->state == RUNNABLE && p->queue == 2)
+    if (p->state == RUNNABLE && p->queue_num == 2)
     {
       highest = p;
       hasRunnable = 1;
@@ -430,7 +430,7 @@ void *highestPriorityInQueue(void)
 
   for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) // finding the process with highest priority
   {
-    if (p->state != RUNNABLE || p->queue != 2)
+    if (p->state != RUNNABLE || p->queue_num != 2)
       continue;
     if (p->priority < highest->priority)
       highest = p;
@@ -475,7 +475,6 @@ scheduler(void)
   c->proc = 0;
 
   struct proc *highestPriorityProcess = 0; 
-  struct proc *lowestPriorityProcess = 0;  
   int existRunnableProcess = 0;       
   
   for(;;){
@@ -520,17 +519,18 @@ scheduler(void)
       {
         if (p->state != RUNNABLE)
           continue;
-        if (p->priority < highest_p->priority)
+        if (p->priority < highestPriorityProcess->priority)
           highestPriorityProcess = p;
       }
 
       if (existRunnableProcess)
       {
-        switch_process(c, highest_p);
+        switch_process(c, highestPriorityProcess);
       }
       break;
 
     case MULTILAYRED_PRIORITY:
+    break;
     //   NOT Complete
     }
     release(&ptable.lock);
@@ -895,7 +895,7 @@ int setPriority(int newOne)
     p->priority = newOne;
   }
   else{
-    p->priority = 5
+    p->priority = 5;
   }
 
   return 0;
@@ -985,7 +985,7 @@ int setQueue(int queue_num)
   }
   else
   {
-    curproc->queue = queue_num;
+    curproc->queue_num = queue_num;
     return 0;
   }
 }

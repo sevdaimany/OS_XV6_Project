@@ -27,8 +27,7 @@ int main(int argc, char *argv[])
 
         printf(1, "turnAroundTime for process /%d/ is :%d\n", getpid(), turnAroundTime);
         printf(1, "waitingTime for process /%d/ is :%d\n", getpid(), waitingTime);
-        printf(1, "CBT for process /%d/ is :%d\n", getpid(), CBT);
-        printf(1, "\n\n");
+        printf(1, "CBT for process /%d/ is :%d\n\n", getpid(), CBT);
     }
     else{ 
 
@@ -52,7 +51,6 @@ int main(int argc, char *argv[])
 
            
 
-     printf(1, "\n\n\n*****AVG Times in total*****\n");
         int turnaroundsSum = 0;
         int waitingsSum = 0;
         int CBTsSum = 0;
@@ -62,7 +60,7 @@ int main(int argc, char *argv[])
             waitingsSum += waitings[j];
             CBTsSum += CBTs[j];
         }
-        printf(1, "Total -> AVG Turnaround: %d, AVG Waiting: %d, AVG CBT: %d\n",
+        printf(1, "Total :\n avarage Turnaround: %d, avarage Waiting: %d, avarage CBT: %d\n",
                turnaroundsSum / NUM_CHILDREN,
                waitingsSum / NUM_CHILDREN,
                CBTsSum / NUM_CHILDREN);
